@@ -1,4 +1,4 @@
 amdshim
 =======
 
-super small amd shim with path resolution
+Super small amd shim with path resolution, embed to make you lib smaller!
