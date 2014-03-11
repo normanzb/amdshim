@@ -2,18 +2,25 @@ var require, define;
 (function (undef) {
     var mod = {}, g = this;
     function resolvePath(base, relative){
-        var ret;
+        var ret, upCount = 0, l;
+
         base = base.split('/');
         relative = relative.split('/');
         base.pop();
         ret = base.concat(relative);
 
-        for(var l = ret.length ; l--; ){
+        for(l = ret.length ; l--; ){
             if ( ret[l] == '.' ) {
                 ret.splice( l, 1 );
             }
-            else if ( ret[l] == '..' && l > 0 ) {
-                ret.splice( l - 1, 2 );
+            else if ( ret[l] == '..' ) {
+                upCount++;
+            }
+            else {
+                if ( upCount > 0 ) {
+                    ret.splice( l, 2 );
+                    upCount--;
+                }
             }
         }
         return ret.join('/');
