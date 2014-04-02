@@ -6,8 +6,13 @@ var require, define;
 
         base = base.split('/');
         relative = relative.split('/');
-        base.pop();
-        ret = base.concat(relative);
+        if ( relative[0] == '.' || relative[0] == '..' ) {
+            base.pop();
+            ret = base.concat(relative);
+        }
+        else {
+            ret = relative;
+        }
 
         for(l = ret.length ; l--; ){
             if ( ret[l] == '.' ) {
