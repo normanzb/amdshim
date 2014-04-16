@@ -1,5 +1,6 @@
-var require, define;
+var amdShim = {};
 (function (undef) {
+    var require, define, g = this;
 
     /*
      * A compact version of Promise
@@ -221,4 +222,29 @@ var require, define;
             return resolved[0];
         }
     };
+
+    amdShim.require = require; amdShim.define = define;
+    function backup() {
+        if ( g.require !== require ) {
+            backup.require = g.require;
+        }
+        if ( g.define !== define ) {
+            backup.define = g.define;
+        }
+    };
+    amdShim.remove = function() {
+        if ( g.require === require ) {
+            g.require = backup.require;
+        }
+        if ( g.define === define ) {
+            g.define = backup.define;
+        }
+    };
+    amdShim.insert = function() {
+        backup();
+        g.require = require;
+        g.define = define;
+    };
+    
+    amdShim.insert();
 }());
