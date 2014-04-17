@@ -94,7 +94,7 @@ var amdShim = {};
     /* 
      * AMD shim 
      */
-    var mod = {}, g = this, NE = '_NE_', defers = {}, aCount=0;
+    var mod = {}, g = this, NE = '_NE_', defers = {}, aCount=0, NA = '_anonymous_';
     function resolvePath(base, relative){
         var ret, upCount = 0, l;
 
@@ -127,9 +127,22 @@ var amdShim = {};
     define = function( id, deps, factory ){
         var dfds;
         if ( !factory ) { 
-            if ( typeof deps == 'function' && 'length' in id) {
-                require.apply(g, arguments);
+            if ( typeof deps == 'function' && typeof id == 'string' ) {
+                factory = deps;
+                deps = [];
             }
+            else {
+                if ( typeof deps == 'function' && 'length' in id ) {
+                    factory = deps;
+                    deps = id;
+                }
+                else if ( typeof id == 'function' ) {
+                    factory = id;
+                    deps = [];
+                }
+                id = NA + '/' + aCount++;
+            }
+            return define.call(g, id, deps, factory);
         }
         mod[id] = {
             p: id,
@@ -232,6 +245,22 @@ var amdShim = {};
             backup.define = g.define;
         }
     };
+    function Modules(){
+        this.rename = function ( name, newName ) {
+            if ( !(name in mod) ) { return }
+            define( newName, mod[name].d, mod[name].f );
+            delete mod[name];
+        };
+        this.noNames = function(){
+            var ret = [], cur, i;
+            for( i = aCount; i--; ) {
+                cur = mod[ NA + '/' + i ];
+                if ( cur ) ret.unshift( cur );
+            }
+            return ret;
+        };
+    }
+    Modules.prototype = mod;
     amdShim.remove = function() {
         if ( g.require === require ) {
             g.require = backup.require;
@@ -245,6 +274,6 @@ var amdShim = {};
         g.require = require;
         g.define = define;
     };
-    
+    amdShim.modules = new Modules();
     amdShim.insert();
 }());
