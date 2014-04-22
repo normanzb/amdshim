@@ -275,5 +275,6 @@ var amdShim = {};
         g.define = define;
     };
     amdShim.modules = new Modules();
+    amdShim.waiting = defers;
     amdShim.insert();
 }());
