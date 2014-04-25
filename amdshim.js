@@ -144,6 +144,10 @@ var amdShim = {};
             }
             return define.call(g, id, deps, factory);
         }
+        if ( id in mod ) {
+            // oops, duplicated download?
+            return;   
+        }
         mod[id] = {
             p: id,
             d: deps,
