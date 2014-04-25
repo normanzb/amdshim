@@ -182,7 +182,7 @@ var amdShim = {};
                     cur = {
                         p: NE,
                         d: [],
-                        f: function(){ return require }
+                        f: require
                     };
                 }
                 else {
@@ -203,7 +203,19 @@ var amdShim = {};
                 }
                 dfd
                 .then(function( cur ){
-                    return require.call( cur, cur.d, cur.f );
+                    if ( cur.o ) {
+                        return cur.o;
+                    }
+                    else {
+                        cur.o = new Promise();
+                        return require.call( cur, cur.d, cur.f )
+                            .then(function( result ){
+                                if ( cur.o ) {
+                                    cur.o.resolve( result );
+                                }
+                                return result;
+                            });
+                    }
                 })
                 .then(function( result ){
                     resolved[i] = result;
@@ -222,9 +234,16 @@ var amdShim = {};
 
         ret = dfdFinal.then(function(){
             resolved.push(require, {});
+            var type = typeof factory;
 
-            if ( factory ) {
+            if ( type == 'function' ) {
                 return factory.apply(g, resolved);
+            }
+            else if ( type == 'object' && module.p != NE ) {
+                return object;
+            }
+            else {
+                throw "Try to define a module without telling the module path.";
             }
         });
 
