@@ -246,9 +246,7 @@ var amdShim = {};
             else if ( type == 'object' && module.p != NE ) {
                 return object;
             }
-            else {
-                throw "Try to define a module without telling the module path.";
-            }
+
         });
 
         if ( factory ) {
