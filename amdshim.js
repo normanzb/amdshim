@@ -124,24 +124,36 @@ var amdShim = {};
         }
         return ret.join('/');
     }
-    define = function( id, deps, factory ){
-        var dfds;
+    define = function( ){
+        var dfds, i, arg, id, deps, factory;
+
+        id = arguments[0];
+        deps = arguments[1];
+        factory = arguments[2];
+
         if ( !factory ) { 
-            if ( typeof deps == 'function' && typeof id == 'string' ) {
-                factory = deps;
-                deps = [];
+            id = null;
+
+            for( i = 0 ; i < arguments.length; i++ ) {
+                arg = arguments[i];
+                if ( typeof arg == 'object' && 'length' in arg ) {
+                    deps = arg;
+                }
+                else if ( typeof arg == 'object' ) {
+                    factory = (function(ret) { return function(){ return ret; }})(arg);
+                }
+                else if ( typeof arg == 'function' ) {
+                    factory = arg;
+                }
+                else if ( typeof arg == 'string' ) {
+                    id = arg
+                }
             }
-            else {
-                if ( typeof deps == 'function' && 'length' in id ) {
-                    factory = deps;
-                    deps = id;
-                }
-                else if ( typeof id == 'function' ) {
-                    factory = id;
-                    deps = [];
-                }
+
+            if ( id == null ) {
                 id = NA + '/' + aCount++;
             }
+            
             return define.call(g, id, deps, factory);
         }
         if ( id in mod ) {
