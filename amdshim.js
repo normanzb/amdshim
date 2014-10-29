@@ -184,7 +184,8 @@ var amdShim = {};
         if ( 
             module == null || module === g || 
             // To workaround in IE8, `this` is an wrapper of window when function called like this: window.foo();
-            module.document == g.document 
+            module.document == g.document ||
+            module === amdShim
         ) {
             module = { p: NE };
         }
