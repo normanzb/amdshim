@@ -69,7 +69,10 @@ var require, define;
 
         resolved.push(require, {});
         if ( factory ) {
-            return factory.apply(g, resolved);
+            if ( !('o' in module) ) {
+                module.o = factory.apply(g, resolved);
+            }
+            return module.o;
         }
         else {
             return resolved[0];
