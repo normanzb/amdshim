@@ -31,6 +31,39 @@ var require, define;
         return ret.join('/');
     }
     define = function( id, deps, factory ){
+        id = arguments[0];
+        deps = arguments[1];
+        factory = arguments[2];
+
+        if ( !factory ) { 
+            id = null;
+
+            for( i = 0 ; i < arguments.length; i++ ) {
+                arg = arguments[i];
+                if ( typeof arg == 'object' && 'length' in arg ) {
+                    deps = arg;
+                }
+                else if ( typeof arg == 'object' ) {
+                    factory = (function(ret) { return function(){ return ret; }})(arg);
+                }
+                else if ( typeof arg == 'function' ) {
+                    factory = arg;
+                }
+                else if ( typeof arg == 'string' ) {
+                    id = arg
+                }
+            }
+
+            if ( id == null ) {
+                id = NA + '/' + aCount++;
+            }
+            
+            return define.call(g, id, deps, factory);
+        }
+        if ( id in mod ) {
+            // oops, duplicated download?
+            return;   
+        }
         mod[id] = {
             p: id,
             d: deps,
