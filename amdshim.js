@@ -38,7 +38,7 @@ var require, define;
 
         if ( !factory ) { 
             id = null;
-            deps = null;
+            deps = [];
 
             for( i = 0 ; i < arguments.length; i++ ) {
                 arg = arguments[i];
