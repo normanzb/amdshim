@@ -30,7 +30,8 @@ var require, define;
         }
         return ret.join('/');
     }
-    define = function( id, deps, factory ){
+    define = function( ){
+        var i, arg, id, deps, factory;
         id = arguments[0];
         deps = arguments[1];
         factory = arguments[2];

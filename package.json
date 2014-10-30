@@ -1,6 +1,6 @@
 {
   "name": "amdshim",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "main": "amdshim.js",
   "description": "Super small amd shim with path resolution, embed to make you lib smaller!",
   "repository": {
