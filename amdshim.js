@@ -37,7 +37,7 @@ var require, define;
             f: factory
         };
     };
-    define.amd = true;
+    define.amd = {};
     require = function(deps, factory){
         var module = this;
         var resolved = [], cur, relative, absolute;
