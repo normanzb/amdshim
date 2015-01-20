@@ -204,7 +204,9 @@ var amdShim = {};
                     cur = {
                         p: NE,
                         d: [],
-                        f: require
+                        f: function(){ 
+                            require
+                        }
                     };
                 }
                 else {
