@@ -94,12 +94,162 @@ var amdShim = {};
     /* 
      * AMD shim 
      */
-    var mod = {}, g = this, NE = '_NE_', defers = {}, aCount=0, NA = '_anonymous_';
+    var GET_ELEMENTS_BY_TAG = 'getElementsByTagName',
+        CREATE_ELEMENT = 'createElement',
+        FUNCTION = 'function',
+        DOC = 'document',
+        mod = {}, NE = '_NE_', defers = {}, aCount=0, NA = '_anonymous_', 
+        config = {}, 
+        head = g[DOC][GET_ELEMENTS_BY_TAG]('head')[0] || g[DOC][GET_ELEMENTS_BY_TAG]('html')[0];
+
+    initConfig();
+
+    //get the current executing file path
+    //see: https://github.com/samyk/jiagra/blob/master/jiagra.js
+    function getCurrentScript() {
+        //moz
+        if(g[DOC].currentScript) { 
+            //firefox 4+, Chrome 10+
+            return g[DOC].currentScript.src;
+        }
+        var stack = null;
+        try {
+            stack(); //thrown exception
+        } catch(e) {
+            stack = e.stack; //safari contains line,sourceId,sourceURL
+            if(!stack && window.opera){
+                //opera 9 doesnot has e.stack, but e.Backtrace
+                stack = (String(e).match(/of linked script \S+/g) || []).join(' ');
+            }
+            if(stack) {
+               /*chrome23:
+                * at http://113.93.50.63/data.js:4:1
+                *firefox17:
+                *@http://113.93.50.63/data.js:4
+                *opera12:
+                *@http://113.93.50.63/data.js:4
+                *IE10:
+                *  at Global code (http://113.93.50.63/data.js:4:1)
+                */
+                //pop the last row
+                stack = stack.split( /[@ ]/g).pop();
+                stack = stack[0] == '(' ? stack.slice(1, -1) : stack;
+                //remove line no.
+                return stack.replace(/(:\d+)?:\d+$/i, '');
+            }
+        }
+        var nodes = g[DOC][GET_ELEMENTS_BY_TAG]('SCRIPT'); 
+        //IE
+        for(var i = 0, node; node = nodes[i++];) {
+            if(node.readyState === 'interactive') {
+                return node.src;
+            }
+        }
+
+        return nodes[nodes.length - 1].src;
+    }
+
+    function initConfig() {
+        var anchor, id, key;
+        
+        config.paths = config.paths || {};
+        anchor = g[DOC][CREATE_ELEMENT]('a');
+        anchor.href = config.baseUrl || '.';
+        config.baseUrl = anchor.href;
+        config.proactive = typeof config.proactive === 'object'?
+            config.proactive:(config.proactive===true?{}:null);
+        config.shim = config.shim || {};
+
+        if (config.proactive) {
+            config.proactive.exclude = config.proactive.exclude || {};
+            for(id in defers) {
+                getModule(id);
+            }
+        }
+    }
+
+    function getModule(id) {
+        var path, s, exclude, i, loaded = false, shim;
+        if (defers[id].getting === true) {
+            return;
+        }
+        for(i = config.proactive.exclude.length; i--;){
+            exclude = config.proactive.exclude[i];
+            if ((new RegExp(exclude)).test(id)){
+                return;
+            }
+        }
+        defers[id].getting = true;
+        path = config.baseUrl;
+        if (path.charAt(path.length-1) !== '/'){
+            path+='/';
+        }
+        path += (config.paths[id]?config.paths[id]:id) + '.js';
+        s = g[DOC][CREATE_ELEMENT]('script');
+        s.type = 'text/javascript';
+        s.src = path;
+        s.setAttribute('amdshim-id', id);
+        if (id in config.shim) {
+            var shim = config.shim[id];
+            s.onload = s.onreadystatechange = function(){
+                if (!loaded && (!this.readyState || this.readyState === 'loaded' || this.readyState === 'complete') ) {
+                    loaded = true;
+                    define(id, shim.deps || [], function(){ 
+                        var output;
+                        if (typeof shim.init === FUNCTION) {
+                            try{
+                                output = shim.init.apply(g, arguments);
+                            }
+                            catch(e) {}
+                        }
+                        if(output === undef && shim.exports) {
+                            output = (window.eval || window.execScript)( '(' + shim.exports + ')');
+                        }
+                        return output;
+                    });
+                }
+            };
+            s.onerror = function() {
+                if (console && typeof console.log === FUNCTION) {
+                    console.log('Fail to load module: ' + id);
+                }
+            };
+        }
+        head.insertBefore(s, head.children[0]);
+    }
+
+    function extractCurrentID() {
+        var id;
+        if (config.proactive) {
+            id = getCurrentScript();
+            id = id.replace(config.baseUrl, '');
+            id = resolvePath('.', id);
+            if (id.substr(id.length-3,id.length) === '.js'){
+                id=id.substr(0, id.length-3);
+            }
+            for(var key in config.paths) {
+                if (config.paths[key] === id) {
+                    id = key;
+                    break;
+                }
+            }
+        }
+        else {
+            id = NA + '/' + aCount++;
+        }
+
+        return id;
+    }
+
     function resolvePath(base, relative){
         var ret, upCount = 0, l;
 
         base = base.split('/');
         relative = relative.split('/');
+        // handling relative start with /
+        if (relative[0] === ''){
+            relative.shift();
+        }
         if ( relative[0] == '.' || relative[0] == '..' ) {
             base.pop();
             ret = base.concat(relative);
@@ -133,7 +283,6 @@ var amdShim = {};
 
         if ( !factory ) { 
             id = null;
-            deps = [];
 
             for( i = 0 ; i < arguments.length; i++ ) {
                 arg = arguments[i];
@@ -143,16 +292,16 @@ var amdShim = {};
                 else if ( typeof arg == 'object' ) {
                     factory = (function(ret) { return function(){ return ret; }})(arg);
                 }
-                else if ( typeof arg == 'function' ) {
+                else if ( typeof arg == FUNCTION ) {
                     factory = arg;
                 }
                 else if ( typeof arg == 'string' ) {
-                    id = arg
+                    id = arg;
                 }
             }
 
             if ( id == null ) {
-                id = NA + '/' + aCount++;
+                id = extractCurrentID();
             }
             
             return define.call(g, id, deps, factory);
@@ -169,7 +318,7 @@ var amdShim = {};
         if ( defers[id] ) {
             dfds = defers[id];
 
-            for( var i = 0; i < dfds.length; i++ ) {
+            for(i = 0; i < dfds.length; i++) {
                 dfds[i].resolve( mod[id] );
             }
 
@@ -185,13 +334,16 @@ var amdShim = {};
         if ( 
             module == null || module === g || 
             // To workaround in IE8, `this` is an wrapper of window when function called like this: window.foo();
-            module.document == g.document ||
+            module.document == g[DOC] ||
             module === amdShim
         ) {
             module = { p: NE };
         }
 
-        if ( typeof deps == 'string' && factory == null ) {
+        if (deps == null) {
+            deps = [];
+        }
+        else if ( typeof deps == 'string' && factory == null ) {
             deps = [deps];
         }
 
@@ -200,13 +352,11 @@ var amdShim = {};
                 relative = deps[i];
                 absolute = resolvePath( module.p, relative );
                 var dfd = new Promise();
-                if ( absolute == "require" ) {
+                if ( absolute === 'require' ) {
                     cur = {
                         p: NE,
                         d: [],
-                        f: function(){ 
-                            require
-                        }
+                        f: function(){return require;}
                     };
                 }
                 else {
@@ -214,13 +364,16 @@ var amdShim = {};
                 }
                 if ( !cur ) {
                     if ( !factory ) {
-                        throw "module not found";    
+                        throw 'module not found';    
                     }
                     
                     if ( !defers[absolute] ) {
                         defers[absolute] = []; 
                     }
                     defers[absolute].push( dfd );
+                    if (config.proactive) {
+                        getModule(absolute);
+                    }
                 }
                 else {
                     dfd.resolve( cur );
@@ -260,11 +413,11 @@ var amdShim = {};
             resolved.push(require, {});
             var type = typeof factory;
 
-            if ( type == 'function' ) {
+            if ( type == FUNCTION ) {
                 return factory.apply(g, resolved);
             }
             else if ( type == 'object' && module.p != NE ) {
-                return object;
+                return factory;
             }
 
         });
@@ -285,10 +438,10 @@ var amdShim = {};
         if ( g.define !== define ) {
             backup.define = g.define;
         }
-    };
+    }
     function Modules(){
         this.rename = function ( name, newName ) {
-            if ( !(name in mod) ) { return }
+            if ( !(name in mod) ) { return; }
             define( newName, mod[name].d, mod[name].f );
             delete mod[name];
         };
@@ -314,6 +467,10 @@ var amdShim = {};
         backup();
         g.require = require;
         g.define = define;
+    };
+    amdShim.config = function(cfg) {
+        config = cfg;
+        initConfig();
     };
     amdShim.modules = new Modules();
     amdShim.waiting = defers;

@@ -27,4 +27,28 @@ This version also provide a handful methods/properties as indicated below:
 * amdShim.remove(): Disable this shim from global naming space, similar to noConflict() from the other library.
 * amdShim.modules: Hash table for all loaded modules
 * amdShim.modules.rename(name, newName): Rename module
-* amdShim.modules.noNames: Hash table for all anonymous modules
+* amdShim.modules.noNames(): Return hash table for all anonymous modules
+* amdShim.config: Similar to require.config() in require js, only support a subset of the configuration, such as `paths`, `shim`, `baseUrl`. 
+
+###Configuration
+
+Example:
+
+    {
+        baseUrl: '.',
+        paths: {
+            'RSVP': 'bower_component/RSVP/RSVP'
+        },
+        shim: {
+            'RSVP': {
+                exports: 'RSVP'
+            }
+        },
+        // Enable amdshim to proactively download the script 
+        proactive: {
+            // Exclude scripts from be downloaded automatically
+            exclude: [
+                'RegExp Here'
+            ]
+        }
+    }
