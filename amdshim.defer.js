@@ -325,7 +325,7 @@ var amdShim = {};
             delete defers[id];
         }
     };
-    define.amdShim = define.amd = true;
+    define.amdShim = define.amd = {};
     require = function(deps, factory){
         var module = this;
         var resolved = [], cur, relative, absolute, 
