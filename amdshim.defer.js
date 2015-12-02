@@ -54,7 +54,7 @@ var amdShim = {};
                     me._f.push(handleFail);
                 }
             }
-            
+
             return p;
         };
 
@@ -62,7 +62,7 @@ var amdShim = {};
             var me = this;
 
             me.result = arguments[0];
-            
+
             if (me[REJECTED]){
                 return;
             }
@@ -91,24 +91,26 @@ var amdShim = {};
         return Promise;
     })();
 
-    /* 
-     * AMD shim 
+    /*
+     * AMD shim
      */
     var GET_ELEMENTS_BY_TAG = 'getElementsByTagName',
         CREATE_ELEMENT = 'createElement',
         FUNCTION = 'function',
         DOC = 'document',
-        mod = {}, NE = '_NE_', defers = {}, aCount=0, NA = '_anonymous_', 
-        config = {}, 
+        mod = {}, NE = '_NE_', defers = {}, aCount=0, NA = '_anonymous_',
+        config = {},
         head = g[DOC][GET_ELEMENTS_BY_TAG]('head')[0] || g[DOC][GET_ELEMENTS_BY_TAG]('html')[0];
 
     initConfig();
+
+    function emptyModule(ret) { return function(){ return ret; }; }
 
     //get the current executing file path
     //see: https://github.com/samyk/jiagra/blob/master/jiagra.js
     function getCurrentScript() {
         //moz
-        if(g[DOC].currentScript) { 
+        if(g[DOC].currentScript) {
             //firefox 4+, Chrome 10+
             return g[DOC].currentScript.src;
         }
@@ -138,7 +140,7 @@ var amdShim = {};
                 return stack.replace(/(:\d+)?:\d+$/i, '');
             }
         }
-        var nodes = g[DOC][GET_ELEMENTS_BY_TAG]('SCRIPT'); 
+        var nodes = g[DOC][GET_ELEMENTS_BY_TAG]('SCRIPT');
         //IE
         for(var i = 0, node; node = nodes[i++];) {
             if(node.readyState === 'interactive') {
@@ -150,8 +152,8 @@ var amdShim = {};
     }
 
     function initConfig() {
-        var anchor, id, key;
-        
+        var anchor, id;
+
         config.paths = config.paths || {};
         anchor = g[DOC][CREATE_ELEMENT]('a');
         anchor.href = config.baseUrl || '.';
@@ -190,11 +192,11 @@ var amdShim = {};
         s.src = path;
         s.setAttribute('amdshim-id', id);
         if (id in config.shim) {
-            var shim = config.shim[id];
+            shim = config.shim[id];
             s.onload = s.onreadystatechange = function(){
                 if (!loaded && (!this.readyState || this.readyState === 'loaded' || this.readyState === 'complete') ) {
                     loaded = true;
-                    define(id, shim.deps || [], function(){ 
+                    define(id, shim.deps || [], function(){
                         var output;
                         if (typeof shim.init === FUNCTION) {
                             try{
@@ -210,8 +212,8 @@ var amdShim = {};
                 }
             };
             s.onerror = function() {
-                if (console && typeof console.log === FUNCTION) {
-                    console.log('Fail to load module: ' + id);
+                if (g.console && typeof g.console.log === FUNCTION) {
+                    g.console.log('Fail to load module: ' + id);
                 }
             };
         }
@@ -281,7 +283,7 @@ var amdShim = {};
         deps = arguments[1];
         factory = arguments[2];
 
-        if ( !factory ) { 
+        if ( !factory ) {
             id = null;
             deps = [];
 
@@ -291,7 +293,7 @@ var amdShim = {};
                     deps = arg;
                 }
                 else if ( typeof arg == 'object' ) {
-                    factory = (function(ret) { return function(){ return ret; }})(arg);
+                    factory = emptyModule(arg);
                 }
                 else if ( typeof arg == FUNCTION ) {
                     factory = arg;
@@ -304,12 +306,12 @@ var amdShim = {};
             if ( id == null ) {
                 id = extractCurrentID();
             }
-            
+
             return define.call(g, id, deps, factory);
         }
         if ( id in mod ) {
             // oops, duplicated download?
-            return;   
+            return;
         }
         mod[id] = {
             p: id,
@@ -329,11 +331,11 @@ var amdShim = {};
     define.amdShim = define.amd = {};
     require = function(deps, factory){
         var module = this;
-        var resolved = [], cur, relative, absolute, 
+        var resolved = [], cur, relative, absolute,
             dfdFinal = new Promise(), ret;
 
-        if ( 
-            module == null || module === g || 
+        if (
+            module == null || module === g ||
             // To workaround in IE8, `this` is an wrapper of window when function called like this: window.foo();
             module.document == g[DOC] ||
             module === amdShim
@@ -348,7 +350,7 @@ var amdShim = {};
             deps = [deps];
         }
 
-        if ( deps.length > 0 ) 
+        if ( deps.length > 0 )
             (function step(i){
                 relative = deps[i];
                 absolute = resolvePath( module.p, relative );
@@ -365,11 +367,11 @@ var amdShim = {};
                 }
                 if ( !cur ) {
                     if ( !factory ) {
-                        throw 'module not found';    
+                        throw 'module not found';
                     }
-                    
+
                     if ( !defers[absolute] ) {
-                        defers[absolute] = []; 
+                        defers[absolute] = [];
                     }
                     defers[absolute].push( dfd );
                     if (config.proactive) {
@@ -407,7 +409,7 @@ var amdShim = {};
                     }
                 });
             })(0);
-        else 
+        else
             dfdFinal.resolve();
 
         ret = dfdFinal.then(function(){
