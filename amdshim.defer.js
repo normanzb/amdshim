@@ -171,7 +171,7 @@ var amdShim = {};
     }
 
     function getModule(id) {
-        var path, s, exclude, i, loaded = false, shim;
+        var path, s, exclude, i, loaded = false, shim, configuredPath;
         if (defers[id].getting === true) {
             return;
         }
@@ -182,11 +182,17 @@ var amdShim = {};
             }
         }
         defers[id].getting = true;
-        path = config.baseUrl;
-        if (path.charAt(path.length-1) !== '/'){
-            path+='/';
+        configuredPath = (config.paths[id]?config.paths[id]:id) + '.js';
+        if (/(^\w*?\:|^)\/\//.test(configuredPath)) {
+            path = configuredPath;
         }
-        path += (config.paths[id]?config.paths[id]:id) + '.js';
+        else {
+            path = config.baseUrl;
+            if (path.charAt(path.length-1) !== '/'){
+                path+='/';
+            }
+            path += configuredPath;
+        }
         s = g[DOC][CREATE_ELEMENT]('script');
         s.type = 'text/javascript';
         s.src = path;
