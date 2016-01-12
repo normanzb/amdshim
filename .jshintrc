@@ -1,7 +1,7 @@
 {
     "validthis": true,
     "eqnull": true,
-    "strict": true,
+    "strict": false,
     "quotmark": true,
     "undef": true,
     "unused": true,
