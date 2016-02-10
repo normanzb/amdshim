@@ -1,6 +1,7 @@
 var require, define;
 (function (undef) {
     var mod = {}, g = this;
+    var NE = '_NE_', OBJECT = 'object';
     function resolvePath(base, relative){
         var ret, upCount = 0, l;
 
@@ -30,6 +31,9 @@ var require, define;
         }
         return ret.join('/');
     }
+    function returnRequire() {
+        return require;
+    }
     define = function( ){
         var i, arg, id, deps, factory;
         id = arguments[0];
@@ -42,10 +46,10 @@ var require, define;
 
             for( i = 0 ; i < arguments.length; i++ ) {
                 arg = arguments[i];
-                if ( typeof arg == 'object' && 'length' in arg ) {
+                if ( typeof arg == OBJECT && 'length' in arg ) {
                     deps = arg;
                 }
-                else if ( typeof arg == 'object' ) {
+                else if ( typeof arg == OBJECT ) {
                     factory = (function(ret) { return function(){ return ret; }})(arg);
                 }
                 else if ( typeof arg == 'function' ) {
@@ -75,10 +79,10 @@ var require, define;
     define.amd = {};
     require = function(deps, factory){
         var module = this;
-        var resolved = [], cur, relative, absolute;
+        var resolved = [], cur, relative, absolute, typeFactory;
 
         if ( module == null || module === g ) {
-            module = { p: '_NE_' };
+            module = { p: NE };
         }
 
         if ( typeof deps == 'string' && factory == null ) {
@@ -88,24 +92,30 @@ var require, define;
         for(var i = 0; i < deps.length; i++) {
             relative = deps[i];
             absolute = resolvePath( module.p, relative );
-            if ( absolute == "require" ) {
+            if ( absolute == 'require' ) {
                 cur = {
-                    p: '_NE_',
+                    p: NE,
                     d: [],
-                    f: function(){ return require }
+                    f: returnRequire
                 };
             }
             else {
                 cur = mod[absolute];
             }
-            if ( !cur ) {throw "module not found"}
+            if ( !cur ) {throw 'module not found';}
             resolved.push( require.call( cur, cur.d, cur.f ) );
         }
 
         resolved.push(require, {});
         if ( factory ) {
+            typeFactory = typeof factory;
             if ( !('o' in module) ) {
-                module.o = factory.apply(g, resolved);
+                if (typeFactory === OBJECT) {
+                    module.o = factory;
+                }
+                else {
+                    module.o = factory.apply(g, resolved);
+                }
             }
             return module.o;
         }
