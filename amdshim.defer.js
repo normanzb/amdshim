@@ -337,7 +337,7 @@ var amdShim = {};
     define.amdShim = define.amd = {};
     require = function(deps, factory){
         var module = this;
-        var resolved = [], cur, relative, absolute,
+        var resolved = [], depLoaded = [],
             dfdFinal = new Promise(), ret;
 
         if (
@@ -356,11 +356,12 @@ var amdShim = {};
             deps = [deps];
         }
 
-        if ( deps.length > 0 )
+        if ( deps.length > 0 ) {
             (function step(i){
-                relative = deps[i];
-                absolute = resolvePath( module.p, relative );
+                var relative = deps[i];
+                var absolute = resolvePath( module.p, relative );
                 var dfd = new Promise();
+                var cur;
                 if ( absolute === 'require' ) {
                     cur = {
                         p: NE,
@@ -387,6 +388,7 @@ var amdShim = {};
                 else {
                     dfd.resolve( cur );
                 }
+
                 dfd
                 .then(function( cur ){
                     if ( cur.o ) {
@@ -403,20 +405,28 @@ var amdShim = {};
                             });
                     }
                 })
-                .then(function( result ){
+                .then(function(result){
                     resolved[i] = result;
-
-                    i++;
-                    if ( i < deps.length ) {
-                        step( i );
+                    depLoaded[i] = true;
+                    if (depLoaded.length < deps.length) {
+                        return;
                     }
-                    else {
-                        dfdFinal.resolve();
+                    for(var itr = 0; itr < depLoaded.length; itr++) {
+                        if (depLoaded[itr] !== true) {
+                            return;
+                        }
                     }
+                    dfdFinal.resolve();
                 });
+
+                if ((i + 1)< deps.length){
+                    step(i+1);
+                }
             })(0);
-        else
+        }
+        else {
             dfdFinal.resolve();
+        }
 
         ret = dfdFinal.then(function(){
             resolved.push(require, {});
