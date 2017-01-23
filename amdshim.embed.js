@@ -1,6 +1,6 @@
 var require, define;
-(function (undef) {
-    var mod = {}, g = this;
+(function () {
+    var mod = {}, g = this, aCount = 0;
     var NE = '_NE_', OBJECT = 'object';
     function resolvePath(base, relative){
         var ret, upCount = 0, l;
@@ -50,18 +50,18 @@ var require, define;
                     deps = arg;
                 }
                 else if ( typeof arg == OBJECT ) {
-                    factory = (function(ret) { return function(){ return ret; }})(arg);
+                    factory = (function(ret) { return function(){ return ret; };})(arg);
                 }
                 else if ( typeof arg == 'function' ) {
                     factory = arg;
                 }
                 else if ( typeof arg == 'string' ) {
-                    id = arg
+                    id = arg;
                 }
             }
 
             if ( id == null ) {
-                id = NA + '/' + aCount++;
+                id = NE + '/' + aCount++;
             }
             
             return define.call(g, id, deps, factory);
