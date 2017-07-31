@@ -494,4 +494,5 @@ var amdShim = {};
     amdShim.modules = new Modules();
     amdShim.waiting = defers;
     amdShim.insert();
+    amdShim.script = {path: getCurrentScript()};
 }());

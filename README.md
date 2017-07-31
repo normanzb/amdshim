@@ -29,6 +29,7 @@ This version also provide a handful methods/properties as indicated below:
 * amdShim.modules.rename(name, newName): Rename module
 * amdShim.modules.noNames(): Return hash table for all anonymous modules
 * amdShim.config: Similar to require.config() in require js, only support a subset of the configuration, such as `paths`, `shim`, `baseUrl`. 
+* amdShim.script.path: Amdshim script path
 
 ###Configuration
 
