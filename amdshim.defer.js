@@ -18,7 +18,7 @@ var amdShim = {};
             if (typeof onSuccess == FUNCTION){
                 var handleSuccess = function () {
                     var res = onSuccess.apply(me, arguments);
-                    if (res && typeof res.then === FUNCTION){
+                    if (res && (res instanceof Promise)){
                         res.then(function(){
                             p.resolve.apply(p, arguments);
                         });
@@ -38,7 +38,7 @@ var amdShim = {};
             if (typeof onFailure == FUNCTION){
                 var handleFail = function () {
                     var res = onFailure.apply(me, arguments);
-                    if (res && typeof res.then === FUNCTION){
+                    if (res && (res instanceof Promise)){
                         res.then(function(){
                             p.resolve.apply(p, arguments);
                         });
