@@ -163,7 +163,7 @@ var amdShim = {};
         config.shim = config.shim || {};
 
         if (config.proactive) {
-            config.proactive.exclude = config.proactive.exclude || {};
+            config.proactive.exclude = config.proactive.exclude || [];
             for(id in defers) {
                 getModule(id);
             }
@@ -171,19 +171,37 @@ var amdShim = {};
     }
 
     function getModule(id) {
-        var path, s, exclude, i, loaded = false, shim, configuredPath;
+        var path, s, pathMatcher, i, loaded = false, shim, configuredPath;
         if (defers[id].getting === true) {
             return;
         }
         for(i = config.proactive.exclude.length; i--;){
-            exclude = config.proactive.exclude[i];
-            if ((new RegExp(exclude)).test(id)){
+            pathMatcher = config.proactive.exclude[i];
+            if ((new RegExp(pathMatcher)).test(id)){
                 return;
             }
         }
         defers[id].getting = true;
-        configuredPath = (config.paths[id]?config.paths[id]:id) + '.js';
-        if (/(^\w*?\:|^)\/\//.test(configuredPath)) {
+        for(pathMatcher in config.proactive.bundle) {
+            if (!config.proactive.bundle.hasOwnProperty(pathMatcher)) {continue;}
+            if ((new RegExp(pathMatcher)).test(id)){
+                configuredPath = config.proactive.bundle[pathMatcher] + '.js';
+                break;
+            }
+        }
+        if (!configuredPath) {
+            configuredPath = (config.paths[id]?config.paths[id]:id) + '.js';
+        }
+        if (!configuredPath) {
+            for(pathMatcher in config.paths) {
+                if (!config.paths.hasOwnProperty(pathMatcher)) {continue;}
+                if (id.indexOf(pathMatcher) === 0) {
+                    configuredPath = id.replace(new RegExp('^'+pathMatcher), config.paths[pathMatcher]) + '.js';
+                    break;
+                }
+            }
+        }
+        if (/(^\w*?:|^)\/\//.test(configuredPath) || configuredPath.charAt(0) === '/') {
             path = configuredPath;
         }
         else {
@@ -192,6 +210,9 @@ var amdShim = {};
                 path+='/';
             }
             path += configuredPath;
+        }
+        if (head.querySelectorAll('script[src="'+path+'"]').length > 0) {
+            return;
         }
         s = g[DOC][CREATE_ELEMENT]('script');
         s.type = 'text/javascript';

@@ -31,7 +31,8 @@ This version also provide a handful methods/properties as indicated below:
 * amdShim.config: Similar to require.config() in require js, only support a subset of the configuration, such as `paths`, `shim`, `baseUrl`. 
 * amdShim.script.path: Amdshim script path
 
-###Configuration
+Configuration
+-------------
 
 Example:
 
@@ -47,6 +48,9 @@ Example:
         },
         // Enable amdshim to proactively download the script 
         proactive: {
+            bundle: {
+                'RegExp Here': 'When RegExp matched, download script here'
+            }
             // Exclude scripts from be downloaded automatically
             exclude: [
                 'RegExp Here'
