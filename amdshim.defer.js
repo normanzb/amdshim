@@ -189,8 +189,8 @@ var amdShim = {};
                 break;
             }
         }
-        if (!configuredPath) {
-            configuredPath = (config.paths[id]?config.paths[id]:id) + '.js';
+        if (!configuredPath && config.paths[id]) {
+            configuredPath = config.paths[id] + '.js';
         }
         if (!configuredPath) {
             for(pathMatcher in config.paths) {
@@ -200,6 +200,9 @@ var amdShim = {};
                     break;
                 }
             }
+        }
+        if (!configuredPath) {
+            configuredPath = id + '.js';
         }
         if (/(^\w*?:|^)\/\//.test(configuredPath) || configuredPath.charAt(0) === '/') {
             path = configuredPath;
