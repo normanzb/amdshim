@@ -1,15 +1,12 @@
 {
   "name": "amdshim",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "main": "amdshim.js",
   "description": "Super small amd shim with path resolution, embed to make you lib smaller!",
   "repository": {
     "type": "git",
     "url": "https://github.com/normanzb/amdshim"
   },
-  "devDependencies": {
-  },
-  "scripts": {
-    
-  }
+  "devDependencies": {},
+  "scripts": {}
 }
