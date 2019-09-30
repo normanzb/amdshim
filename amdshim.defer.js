@@ -250,29 +250,6 @@ var amdShim = {};
         head.insertBefore(s, head.children[0]);
     }
 
-    function extractCurrentID() {
-        var id;
-        if (config.proactive) {
-            id = getCurrentScript();
-            id = id.replace(config.baseUrl, '');
-            id = resolvePath('.', id);
-            if (id.substr(id.length-3,id.length) === '.js'){
-                id=id.substr(0, id.length-3);
-            }
-            for(var key in config.paths) {
-                if (config.paths[key] === id) {
-                    id = key;
-                    break;
-                }
-            }
-        }
-        else {
-            id = NA + '/' + aCount++;
-        }
-
-        return id;
-    }
-
     function resolvePath(base, relative){
         var ret, upCount = 0, l;
 
@@ -306,6 +283,37 @@ var amdShim = {};
         }
         return ret.join('/');
     }
+
+    function extractCurrentID() {
+        var id;
+        var key;
+        if (config.proactive) {
+            id = getCurrentScript();
+            id = id.replace(config.baseUrl, '');
+            id = resolvePath('.', id);
+            if (id.substr(id.length-3,id.length) === '.js'){
+                id=id.substr(0, id.length - 3);
+            }
+
+            for (key in config.paths) {
+                if (config.paths[key] === id) {
+                    id = key;
+                    break;
+                }
+
+                if (id.indexOf(config.paths[key]) === 0) {
+                    id = id.replace(new RegExp('^' + config.paths[key]), key);
+                    break;
+                }
+            }
+        }
+        else {
+            id = NA + '/' + aCount++;
+        }
+
+        return id;
+    }
+
     define = function( ){
         var dfds, i, arg, id, deps, factory;
 
